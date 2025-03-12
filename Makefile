@@ -1,4 +1,4 @@
-OBJS = main.cpp
+OBJS = main.cpp game/game.cpp game/render/graphics.cpp
 OBJ_NAME = bag.out
 CC = g++
 COMPILER_FLAGS = -w
