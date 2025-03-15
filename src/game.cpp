@@ -22,7 +22,7 @@ void Game::gameLoop(){
 	{
 		this->eventLoop();
 		this->renderer->render();
-    
+		
 	}
 }
 

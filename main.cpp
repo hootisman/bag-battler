@@ -1,5 +1,5 @@
 //#include <SDL3/SDL.h>	//todo remove
-#include "game/game.h"
+#include "src/game.h"
 #include <SDL3/SDL_main.h>
 
 
