@@ -2,16 +2,19 @@
 #define GRAPHICS_H
 
 #include <SDL3/SDL.h>
+#include <vector>
 
 #define SCREEN_W 640
 #define SCREEN_H 480
 
+typedef struct PosColorVertex{
+    float x,y,z;
+    Uint8 r,g,b,a;
+} PosColorVertex;
 
-const float triangle_v[] = {
-    -0.5f, -0.5f, 0.0f,
-    0.5f, -0.5f, 0.0f,
-    0.0f, 0.5f, 0.0f
-};
+typedef struct TempGarbo{
+    float x, y, z, a;
+} TempGarbo;
 
 class GameShader{
 public:
@@ -28,11 +31,13 @@ public:
     SDL_GPUGraphicsPipeline* fillPipeline;
     SDL_GPUGraphicsPipeline* linePipeline;
     SDL_GPUDevice* gpu;
+    SDL_GPUBuffer* vertexBuffer;
+
+    Uint64 lastTime;
 
     GameRenderer();
     void render();
     ~GameRenderer();
 };
-
 
 #endif
