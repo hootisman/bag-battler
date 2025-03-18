@@ -3,6 +3,7 @@
 
 #include <SDL3/SDL.h>
 #include <vector>
+#include <span>
 
 #define SCREEN_W 640
 #define SCREEN_H 480
@@ -20,6 +21,14 @@ class GameShader{
 public:
     // GameShader();
     static SDL_GPUShader* initShader(SDL_GPUDevice*, SDL_GPUShaderStage, const char*, Uint32, Uint32, Uint32, Uint32);
+    static void configurePipelineInfo(
+        SDL_GPUGraphicsPipelineCreateInfo*,
+        std::span<SDL_GPUVertexBufferDescription>,
+        std::span<SDL_GPUVertexAttribute>,
+        std::span<SDL_GPUColorTargetDescription>,
+        SDL_GPUShader*,
+        SDL_GPUShader*
+    );
     // ~GameShader();
 };
 

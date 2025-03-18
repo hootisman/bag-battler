@@ -45,6 +45,30 @@ SDL_GPUShader* GameShader::initShader(
 }
 
 
+    void GameShader::configurePipelineInfo(
+		SDL_GPUGraphicsPipelineCreateInfo* pipelineInfo,
+        std::span<SDL_GPUVertexBufferDescription> vertexDesc,
+        std::span<SDL_GPUVertexAttribute> vertexAttr,
+        std::span<SDL_GPUColorTargetDescription> colorTarget,
+        SDL_GPUShader* vertShader,
+        SDL_GPUShader* fragShader
+	){
+		SDL_GPUVertexInputState vertexInput = {
+			.vertex_buffer_descriptions = vertexDesc.data(),
+			.num_vertex_buffers = vertexDesc.size(),
+			.vertex_attributes = vertexAttr.data(),
+			.num_vertex_attributes = vertexAttr.size()
+		};
+
+		(*pipelineInfo) = {
+			.vertex_shader = vertShader,
+			.fragment_shader = fragShader,
+			.vertex_input_state = vertexInput,
+			.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
+			.target_info = {.color_target_descriptions = colorTarget.data(), .num_color_targets = (Uint32)colorTarget.size()}
+		};
+	}
+
 GameRenderer::GameRenderer(){
 	this->isWireframe = false;
     try
@@ -79,35 +103,19 @@ GameRenderer::GameRenderer(){
 
 		/****** Pipeline Setup *******/
 		/*** 	ALso vertex buffer setup */
-
+		SDL_GPUVertexAttribute vertexAttr[] = {{0, 0, SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3, 0}, {1, 0, SDL_GPU_VERTEXELEMENTFORMAT_UBYTE4_NORM, sizeof(float) * 3}};
+		SDL_GPUVertexBufferDescription vertexDesc[] = {0, sizeof(PosColorVertex), SDL_GPU_VERTEXINPUTRATE_VERTEX, 0};
+		SDL_GPUColorTargetDescription colorTargetDesc[] = {SDL_GetGPUSwapchainTextureFormat(this->gpu, this->window)};
 		SDL_GPUGraphicsPipelineCreateInfo pipelineInfo = {};
 
-		SDL_GPUColorTargetDescription colorTargetDesc[] = {{
-			.format = SDL_GetGPUSwapchainTextureFormat(this->gpu, this->window)
-		}};
-
-		SDL_GPUVertexInputState vertexInput = {};
-
-		SDL_GPUVertexBufferDescription vertexBufferDesc[1] = {0, sizeof(PosColorVertex), SDL_GPU_VERTEXINPUTRATE_VERTEX, 0};
-		SDL_GPUVertexAttribute vertexBufferAttr[2] = {{
-			0, 0, SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3, 0
-		}, {
-			1, 0, SDL_GPU_VERTEXELEMENTFORMAT_UBYTE4_NORM, sizeof(float) * 3
-		}};
-
-		vertexInput.num_vertex_buffers = 1;
-		vertexInput.vertex_buffer_descriptions = vertexBufferDesc;
-		vertexInput.num_vertex_attributes = 2;
-		vertexInput.vertex_attributes = vertexBufferAttr;
-		pipelineInfo.vertex_shader = vertShader;
-		pipelineInfo.fragment_shader = fragShader;
-		pipelineInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
-		pipelineInfo.target_info = {
-			.color_target_descriptions = colorTargetDesc,
-			.num_color_targets = 1,
-		};
-
-		pipelineInfo.vertex_input_state = vertexInput; 
+		GameShader::configurePipelineInfo(
+			&pipelineInfo,
+			vertexDesc,
+			vertexAttr,
+			colorTargetDesc,
+			vertShader,
+			fragShader
+		);
 
 		pipelineInfo.rasterizer_state.fill_mode = SDL_GPU_FILLMODE_FILL;
 		this->fillPipeline = SDL_CreateGPUGraphicsPipeline(this->gpu, &pipelineInfo);
