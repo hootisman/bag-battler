@@ -11,6 +11,9 @@ void Game::keyDownHandler(SDL_KeyboardEvent& e){
 	case SDLK_Q:
         this->isGameRunning = false;
 		break;
+	case SDLK_P:
+		this->renderer->isWireframe = !this->renderer->isWireframe;
+		break;
 	
 	default:
 		break;

@@ -46,6 +46,7 @@ SDL_GPUShader* GameShader::initShader(
 
 
 GameRenderer::GameRenderer(){
+	this->isWireframe = false;
     try
 	{
 		if(!SDL_Init(SDL_INIT_VIDEO)) throw 2;
@@ -77,6 +78,7 @@ GameRenderer::GameRenderer(){
 
 
 		/****** Pipeline Setup *******/
+		/*** 	ALso vertex buffer setup */
 
 		SDL_GPUGraphicsPipelineCreateInfo pipelineInfo = {};
 
@@ -85,12 +87,6 @@ GameRenderer::GameRenderer(){
 		}};
 
 		SDL_GPUVertexInputState vertexInput = {};
-
-		// std::vector<SDL_GPUVertexBufferDescription> vertexBufferDesc{};
-		// vertexBufferDesc.emplace_back(0, sizeof(PosColorVertex), SDL_GPU_VERTEXINPUTRATE_VERTEX, 0);
-		// std::vector<SDL_GPUVertexAttribute> vertexBufferAttr{};
-		// vertexBufferAttr.emplace_back(0, 0, SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3, 0);
-		// vertexBufferAttr.emplace_back(1, 0, SDL_GPU_VERTEXELEMENTFORMAT_UBYTE4_NORM, sizeof(float) * 3);
 
 		SDL_GPUVertexBufferDescription vertexBufferDesc[1] = {0, sizeof(PosColorVertex), SDL_GPU_VERTEXINPUTRATE_VERTEX, 0};
 		SDL_GPUVertexAttribute vertexBufferAttr[2] = {{
@@ -133,19 +129,34 @@ GameRenderer::GameRenderer(){
 		SDL_ReleaseGPUShader(this->gpu, vertShader);
 		SDL_ReleaseGPUShader(this->gpu, fragShader);
 
+		Uint32 vertexBSize = sizeof(PosColorVertex) * 4;
+		Uint32 indexBSize = sizeof(Uint16) * 6;
+
 		/* Vertex Buffer */
-		SDL_GPUBufferCreateInfo vertexBufferInfo{.usage = SDL_GPU_BUFFERUSAGE_VERTEX, .size = sizeof(PosColorVertex) * 3};
+		SDL_GPUBufferCreateInfo vertexBufferInfo{.usage = SDL_GPU_BUFFERUSAGE_VERTEX, .size = vertexBSize};
 		this->vertexBuffer = SDL_CreateGPUBuffer(this->gpu, &vertexBufferInfo);
 
-		SDL_GPUTransferBufferCreateInfo transferBufferInfo{.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD, .size = sizeof(PosColorVertex) * 3};
+		SDL_GPUBufferCreateInfo indexBufferInfo{.usage = SDL_GPU_BUFFERUSAGE_INDEX, .size = indexBSize};
+		this->indexBuffer = SDL_CreateGPUBuffer(this->gpu, &indexBufferInfo);
+
+		SDL_GPUTransferBufferCreateInfo transferBufferInfo{.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD, .size = vertexBSize + indexBSize};
 		SDL_GPUTransferBuffer* transferBuffer = SDL_CreateGPUTransferBuffer(this->gpu, &transferBufferInfo);
 
 		PosColorVertex* transferData = (PosColorVertex*)SDL_MapGPUTransferBuffer(this->gpu, transferBuffer, false);
 
 
-		transferData[0] = {-1,-1,0,255,0,0,255};
-		transferData[1] = {1,-1,0,0,255,0,255};
-		transferData[2] = {0,1,0,0,0,255,255};
+		transferData[0] = {-0.8,-0.8,0,255,0,0,255};	//bot left
+		transferData[1] = {0.8,-0.8,0,0,255,0,255};		//bot right
+		transferData[2] = {-0.8,0.8,0,0,0,255,255};		//top left
+		transferData[3] = {0.8,0.8,0,0,0,255,255};		//top right
+
+		Uint16* indexData = (Uint16*) &(transferData[4]);
+		indexData[0] = 1;
+		indexData[1] = 0;
+		indexData[2] = 2;
+		indexData[3] = 2;
+		indexData[4] = 3;
+		indexData[5] = 1;
 
 		SDL_UnmapGPUTransferBuffer(this->gpu, transferBuffer);
 
@@ -154,8 +165,11 @@ GameRenderer::GameRenderer(){
 
 
 		SDL_GPUTransferBufferLocation transferLoc{.transfer_buffer = transferBuffer, .offset = 0};
-		SDL_GPUBufferRegion vertexLoc{.buffer = this->vertexBuffer, .offset = 0, .size = sizeof(PosColorVertex) * 3};
+		SDL_GPUBufferRegion vertexLoc{.buffer = this->vertexBuffer, .offset = 0, .size = vertexBSize};
+		SDL_GPUTransferBufferLocation transferLoc_index{.transfer_buffer = transferBuffer, .offset = vertexBSize};
+		SDL_GPUBufferRegion indexLoc{.buffer = this->indexBuffer, .offset = 0, .size = indexBSize};
 		SDL_UploadToGPUBuffer(copyPass, &transferLoc, &vertexLoc, false);
+		SDL_UploadToGPUBuffer(copyPass, &transferLoc_index, &indexLoc, false);
 		
 		SDL_EndGPUCopyPass(copyPass);
 		SDL_SubmitGPUCommandBuffer(uploadCmdBuf);
@@ -172,6 +186,14 @@ GameRenderer::GameRenderer(){
 }
 
 void GameRenderer::render(){
+
+	float currentTime = (float)(SDL_GetTicks() - this->lastTime);
+	if (currentTime > 6000)
+	{
+		this->lastTime = SDL_GetTicks();
+	}
+	
+	int calcTime = ((int)currentTime) / 100;
 	SDL_GPUCommandBuffer* buff = SDL_AcquireGPUCommandBuffer(this->gpu);
 	if(buff == NULL){
 		SDL_Log("Failed to load command buffer %s\n", SDL_GetError());
@@ -198,25 +220,22 @@ void GameRenderer::render(){
 	CTI.load_op = SDL_GPU_LOADOP_CLEAR;
 	CTI.store_op = SDL_GPU_STOREOP_STORE;
 
-	float currentTime = (float)(SDL_GetTicks() - this->lastTime);
-	if (currentTime > 6000)
-	{
-		this->lastTime = SDL_GetTicks();
-	}
-	
-	int calcTime = ((int)currentTime) / 100;
 
 	TempGarbo toSend = { (SDL_sin(calcTime) + 1.0f)/ 2.0f, 0, 0, 0};
-	SDL_Log("%d\n", calcTime);
+	// SDL_Log("%d\n", calcTime);
 
 	SDL_GPURenderPass* render_pass = SDL_BeginGPURenderPass(buff, &CTI, 1, NULL);	//like photoshop layers
 
-	SDL_BindGPUGraphicsPipeline(render_pass, this->fillPipeline);
+	this->isWireframe ? SDL_BindGPUGraphicsPipeline(render_pass, this->linePipeline) : SDL_BindGPUGraphicsPipeline(render_pass, this->fillPipeline); 
 	SDL_GPUBufferBinding buffBinding{.buffer = this->vertexBuffer, .offset = 0};
 	SDL_BindGPUVertexBuffers(render_pass, 0, &buffBinding, 1);
+
+	SDL_GPUBufferBinding buffBinding_index{.buffer = this->indexBuffer, .offset = 0};
+	SDL_BindGPUIndexBuffer(render_pass, &buffBinding_index, SDL_GPU_INDEXELEMENTSIZE_16BIT);
 	SDL_PushGPUVertexUniformData(buff, 0, &toSend, sizeof(toSend));
 
-	SDL_DrawGPUPrimitives(render_pass, 3, 1, 0, 0);
+	SDL_DrawGPUIndexedPrimitives(render_pass, 6, 1, 0, 0, 0);
+	// SDL_DrawGPUPrimitives(render_pass, 3, 1, 0, 0);
 	
 
 	SDL_EndGPURenderPass(render_pass);
@@ -236,6 +255,7 @@ GameRenderer::~GameRenderer(){
 	SDL_ReleaseGPUGraphicsPipeline(this->gpu, linePipeline);
 	SDL_ReleaseWindowFromGPUDevice(this->gpu, this->window);
 	SDL_ReleaseGPUBuffer(this->gpu, this->vertexBuffer);
+	SDL_ReleaseGPUBuffer(this->gpu, this->indexBuffer);
 	SDL_DestroyWindow(this->window);
     SDL_DestroyGPUDevice(this->gpu);
 }

@@ -32,12 +32,16 @@ public:
     SDL_GPUGraphicsPipeline* linePipeline;
     SDL_GPUDevice* gpu;
     SDL_GPUBuffer* vertexBuffer;
+    SDL_GPUBuffer* indexBuffer;
+    bool isWireframe;
 
     Uint64 lastTime;
 
     GameRenderer();
     void render();
     ~GameRenderer();
+// private:
+//     SDL_GPUBuffer* createBuffer();
 };
 
 #endif
