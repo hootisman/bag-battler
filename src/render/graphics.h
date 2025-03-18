@@ -1,6 +1,7 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
+#include "debug.h"
 #include <SDL3/SDL.h>
 #include <vector>
 #include <span>
