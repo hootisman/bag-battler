@@ -51,6 +51,7 @@ void Game::eventLoop(){
 		case SDL_EVENT_KEY_DOWN:
 			this->keyDownHandler(event.key);
 			break;
+		
 		default:
 			break;
 		}

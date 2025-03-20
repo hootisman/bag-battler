@@ -18,10 +18,6 @@ typedef struct PosColorVertex{
     Uint8 r,g,b,a;
 } PosColorVertex;
 
-typedef struct TempGarbo{
-    float x, y, z, a;
-} TempGarbo;
-
 class GameShader{
 public:
     // GameShader();

@@ -44,12 +44,10 @@ SDL_GPUShader* GameShader::initShader(
         SDL_GPUShader* vertShader,
         SDL_GPUShader* fragShader
 	){
-		// SDL_GPUVertexInputState vertexInput = {
 
 		(*pipelineInfo) = {
 			.vertex_shader = vertShader,
 			.fragment_shader = fragShader,
-			// .vertex_input_state = vertexInput,
 			.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
 			.target_info = {.color_target_descriptions = colorTarget.data(), .num_color_targets = (Uint32)colorTarget.size()}
 		};
@@ -182,17 +180,7 @@ GameRenderer::GameRenderer(){
 
 void GameRenderer::render(){
 
-	// float currentTime = (float)(SDL_GetTicks() - this->lastTime);
-	// if (currentTime > 6000)
-	// {
-	// 	this->lastTime = SDL_GetTicks();
-	// }
-	// int calcTime = ((int)currentTime) / 100;
-	// TempGarbo toSend = { (SDL_sin(calcTime) + 1.0f)/ 2.0f, 0, 0, 0};
-	// SDL_Log("%d\n", calcTime);
-	
 
-	// this->translation = glm::rotate(this->translation, glm::radians(1.0f), glm::vec3(0.0f, 1.0f, 1.0f));
 
 	SDL_GPUCommandBuffer* buff = SDL_AcquireGPUCommandBuffer(this->gpu);
 	if(buff == NULL) throw RendererException("Failed to acquire command buffer");
@@ -216,7 +204,9 @@ void GameRenderer::render(){
 	CTI.store_op = SDL_GPU_STOREOP_STORE;
 
 	
-
+	this->camera->rotateModel(1.0f, 0.8f, 0.0f, 0.6f);
+	glm::mat4 cameraMatrix = this->camera->getCameraMatrix();
+	
 
 	SDL_GPURenderPass* render_pass = SDL_BeginGPURenderPass(buff, &CTI, 1, NULL);	//like photoshop layers
 
@@ -226,8 +216,7 @@ void GameRenderer::render(){
 
 	SDL_GPUBufferBinding buffBinding_index{.buffer = this->indexBuffer, .offset = 0};
 	SDL_BindGPUIndexBuffer(render_pass, &buffBinding_index, SDL_GPU_INDEXELEMENTSIZE_16BIT);
-	// SDL_PushGPUVertexUniformData(buff, 0, &toSend, sizeof(toSend));
-	SDL_PushGPUVertexUniformData(buff, 0, &this->camera->cameraMatrix, sizeof(this->camera->cameraMatrix));
+	SDL_PushGPUVertexUniformData(buff, 0, &cameraMatrix, sizeof(cameraMatrix));
 
 	SDL_DrawGPUIndexedPrimitives(render_pass, 6, 1, 0, 0, 0);
 	// SDL_DrawGPUPrimitives(render_pass, 3, 1, 0, 0);

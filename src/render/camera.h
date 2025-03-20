@@ -10,7 +10,8 @@ public:
 
     GameCamera();
     void moveCamera(float, float, float);
-    void updateCameraMatrix();
+    void rotateModel(float, float, float, float);
+    glm::mat4 getCameraMatrix();
     ~GameCamera();
 private:
     glm::mat4 model, view, proj;

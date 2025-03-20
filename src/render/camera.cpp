@@ -9,17 +9,19 @@ GameCamera::GameCamera(){
     this->view = glm::translate(this->view, glm::vec3(0.0f, 0.0f, -3.0f));
     this->proj = glm::perspective(glm::radians(45.0f), (float)640 / (float)480, 0.1f, 100.0f);
 
-    this->updateCameraMatrix();
+}
+
+void GameCamera::rotateModel(float x, float y, float z, float angle){
+    this->model = glm::rotate(this->model, glm::radians(angle), glm::vec3(x, y, z));
 }
 
 void GameCamera::moveCamera(float x, float y, float z){
- 
     this->view = glm::translate(this->view, glm::vec3(x, y, z));
-    this->updateCameraMatrix();
 }
 
-void GameCamera::updateCameraMatrix(){
-    this->cameraMatrix = this->proj * this->view * this->model;
+
+glm::mat4 GameCamera::getCameraMatrix(){
+    return this->proj * this->view * this->model;
 }
 
 GameCamera::~GameCamera() {}
