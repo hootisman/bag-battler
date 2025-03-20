@@ -12,6 +12,7 @@
 
 #define SCREEN_W 640
 #define SCREEN_H 480
+#define SHADER_RESOURCE_PATH "resources/shaders/"
 
 typedef struct PosColorVertex{
     float x,y,z;
@@ -20,8 +21,7 @@ typedef struct PosColorVertex{
 
 class GameShader{
 public:
-    // GameShader();
-    static SDL_GPUShader* initShader(SDL_GPUDevice*, SDL_GPUShaderStage, const char*, Uint32, Uint32, Uint32, Uint32);
+    static SDL_GPUShader* initShader(const char*, SDL_GPUDevice*, SDL_GPUShaderStage, Uint32, Uint32, Uint32, Uint32);
     static void configurePipelineInfo(
         SDL_GPUGraphicsPipelineCreateInfo*,
         std::span<SDL_GPUVertexBufferDescription>,
@@ -30,7 +30,6 @@ public:
         SDL_GPUShader*,
         SDL_GPUShader*
     );
-    // ~GameShader();
 };
 
 
@@ -45,8 +44,6 @@ public:
     SDL_GPUBuffer* indexBuffer;
     GameCamera* camera;
     bool isWireframe;
-
-    Uint64 lastTime;
 
     GameRenderer();
     void render();

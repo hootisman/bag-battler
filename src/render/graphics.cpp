@@ -2,74 +2,79 @@
 
 
 SDL_GPUShader* GameShader::initShader(
+	const char* fileName,
 	SDL_GPUDevice* gpu, SDL_GPUShaderStage stage, 
-	const char* filePath, Uint32 sampler, 
-	Uint32 uniformBuffer, Uint32 storageBuffer, 
-	Uint32 storageTexture
+	Uint32 sampler, Uint32 uniformBuffer, 
+	Uint32 storageBuffer, Uint32 storageTexture
 ){
-
-	const char* entryPoint = "main";
+	const char* entryPoint = "main";	//todo entrypoint and format different per system
 	SDL_GPUShaderFormat format = SDL_GPU_SHADERFORMAT_SPIRV;
 
+	/* io stuff */
+	const char* basePath = SDL_GetBasePath();
+	char fullPath[256];
+
+	SDL_snprintf(fullPath, sizeof(fullPath), "%s%s%s", basePath, SHADER_RESOURCE_PATH, fileName);
+	SDL_Log("%s\n", fullPath);
+
 	size_t fileSize;
-	void* file = SDL_LoadFile(filePath, &fileSize);
+	void* file = SDL_LoadFile(fullPath, &fileSize);
 	if(file == NULL) throw RendererException("Error loading file");
 
-	SDL_GPUShaderCreateInfo info = {};
-
-	info.code_size = fileSize,
-	info.code = (const Uint8*)file,
-	info.entrypoint = entryPoint,
-	info.format = format,
-	info.stage = stage,
-	info.num_samplers = sampler,
-	info.num_storage_textures = storageTexture,
-	info.num_storage_buffers = storageBuffer,
-	info.num_uniform_buffers = uniformBuffer,
-	info.props = 0;
+	SDL_GPUShaderCreateInfo info = {
+		.code_size = fileSize,
+		.code = (const Uint8*)file,
+		.entrypoint = entryPoint,
+		.format = format,
+		.stage = stage,
+		.num_samplers = sampler,
+		.num_storage_textures = storageTexture,
+		.num_storage_buffers = storageBuffer,
+		.num_uniform_buffers = uniformBuffer,
+		.props = 0
+	};
 	SDL_GPUShader* shader = SDL_CreateGPUShader(gpu, &info);
+
 	if (shader == NULL) {SDL_free(file); throw RendererException("Error creating shader from file");}
-	
+
 	SDL_free(file);
 	return shader;
 
 }
 
 
-    void GameShader::configurePipelineInfo(
-		SDL_GPUGraphicsPipelineCreateInfo* pipelineInfo,
-        std::span<SDL_GPUVertexBufferDescription> vertexDesc,
-        std::span<SDL_GPUVertexAttribute> vertexAttr,
-        std::span<SDL_GPUColorTargetDescription> colorTarget,
-        SDL_GPUShader* vertShader,
-        SDL_GPUShader* fragShader
-	){
+void GameShader::configurePipelineInfo(
+	SDL_GPUGraphicsPipelineCreateInfo* pipelineInfo,
+	std::span<SDL_GPUVertexBufferDescription> vertexDesc,
+	std::span<SDL_GPUVertexAttribute> vertexAttr,
+	std::span<SDL_GPUColorTargetDescription> colorTarget,
+	SDL_GPUShader* vertShader,
+	SDL_GPUShader* fragShader
+){
 
-		(*pipelineInfo) = {
-			.vertex_shader = vertShader,
-			.fragment_shader = fragShader,
-			.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
-			.target_info = {.color_target_descriptions = colorTarget.data(), .num_color_targets = (Uint32)colorTarget.size()}
-		};
+	(*pipelineInfo) = {
+		.vertex_shader = vertShader,
+		.fragment_shader = fragShader,
+		.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
+		.target_info = {.color_target_descriptions = colorTarget.data(), .num_color_targets = (Uint32)colorTarget.size()}
+	};
 
-		pipelineInfo->vertex_input_state = {
-			.vertex_buffer_descriptions = vertexDesc.data(),
-			.num_vertex_buffers = (Uint32)vertexDesc.size(),
-			.vertex_attributes = vertexAttr.data(),
-			.num_vertex_attributes = (Uint32)vertexAttr.size()
-		};
-	}
+	pipelineInfo->vertex_input_state = {
+		.vertex_buffer_descriptions = vertexDesc.data(),
+		.num_vertex_buffers = (Uint32)vertexDesc.size(),
+		.vertex_attributes = vertexAttr.data(),
+		.num_vertex_attributes = (Uint32)vertexAttr.size()
+	};
+}
 
 GameRenderer::GameRenderer(){
 	this->isWireframe = false;
 
 	if(!SDL_Init(SDL_INIT_VIDEO)) throw RendererException("Failed to init SDL");
 
-	this->lastTime = SDL_GetTicks();
 	//window
 	this->window = SDL_CreateWindow( "hi", SCREEN_W, SCREEN_H, 0);
 	if(!this->window) throw RendererException("Error creating window");
-
 
 	//gpu
 	this->gpu = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV, false, NULL);
@@ -78,19 +83,10 @@ GameRenderer::GameRenderer(){
 	//bind gpu to window
 	if(!SDL_ClaimWindowForGPUDevice(this->gpu, this->window)) throw RendererException("Error binding gpu to window");
 
-	const char* basePath = SDL_GetBasePath();
-	char fullPath[256];
+	SDL_GPUShader* vertShader = GameShader::initShader("transtest.vert.spv", this->gpu, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
+	SDL_GPUShader* fragShader = GameShader::initShader("SolidColor.frag.spv", this->gpu, SDL_GPU_SHADERSTAGE_FRAGMENT, 0, 0, 0, 0);
 
-	SDL_snprintf(fullPath, sizeof(fullPath), "%sresources/shaders/%s", basePath, "transtest.vert.spv");
-	SDL_Log("%s\n", fullPath);
-	SDL_GPUShader* vertShader = GameShader::initShader(this->gpu, SDL_GPU_SHADERSTAGE_VERTEX, fullPath, 0, 1, 0, 0);
-	
-	SDL_snprintf(fullPath, sizeof(fullPath), "%sresources/shaders/%s", basePath, "SolidColor.frag.spv");
-	SDL_Log("%s\n", fullPath);
-	SDL_GPUShader* fragShader = GameShader::initShader(this->gpu, SDL_GPU_SHADERSTAGE_FRAGMENT, fullPath, 0, 0, 0, 0);
-
-
-
+	//todo move to pipeline creation function
 	SDL_GPUVertexAttribute vertexAttr[] = {{0, 0, SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3, 0}, {1, 0, SDL_GPU_VERTEXELEMENTFORMAT_UBYTE4_NORM, sizeof(float) * 3}};
 	SDL_GPUVertexBufferDescription vertexDesc[] = {0, sizeof(PosColorVertex), SDL_GPU_VERTEXINPUTRATE_VERTEX, 0};
 	SDL_GPUColorTargetDescription colorTargetDesc[] = {SDL_GetGPUSwapchainTextureFormat(this->gpu, this->window)};
@@ -172,15 +168,10 @@ GameRenderer::GameRenderer(){
 	
 	SDL_Log("%s\n", SDL_GetGPUDeviceDriver(this->gpu));
 
-	// this->translation = glm::mat4(1.0f);
-	// this->translation = glm::rotate(this->translation, glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	this->camera = new GameCamera();
-
 }
 
 void GameRenderer::render(){
-
-
 
 	SDL_GPUCommandBuffer* buff = SDL_AcquireGPUCommandBuffer(this->gpu);
 	if(buff == NULL) throw RendererException("Failed to acquire command buffer");
