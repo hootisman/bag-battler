@@ -2,9 +2,13 @@
 #define GRAPHICS_H
 
 #include "debug.h"
+#include "camera.h"
 #include <SDL3/SDL.h>
 #include <vector>
 #include <span>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 
 #define SCREEN_W 640
 #define SCREEN_H 480
@@ -43,6 +47,7 @@ public:
     SDL_GPUDevice* gpu;
     SDL_GPUBuffer* vertexBuffer;
     SDL_GPUBuffer* indexBuffer;
+    GameCamera* camera;
     bool isWireframe;
 
     Uint64 lastTime;

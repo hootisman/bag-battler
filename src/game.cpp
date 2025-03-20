@@ -14,6 +14,18 @@ void Game::keyDownHandler(SDL_KeyboardEvent& e){
 	case SDLK_P:
 		this->renderer->isWireframe = !this->renderer->isWireframe;
 		break;
+	case SDLK_W:
+		this->renderer->camera->moveCamera(0.0f, 0.0f, 0.1f);
+		break;
+	case SDLK_A:
+		this->renderer->camera->moveCamera(0.1f, 0.0f, 0.0f);
+		break;
+	case SDLK_S:
+		this->renderer->camera->moveCamera(0.0f, 0.0f, -0.1f);
+		break;
+	case SDLK_D:
+		this->renderer->camera->moveCamera(-0.1f, 0.0f, 0.0f);
+		break;
 	
 	default:
 		break;

@@ -83,7 +83,7 @@ GameRenderer::GameRenderer(){
 	const char* basePath = SDL_GetBasePath();
 	char fullPath[256];
 
-	SDL_snprintf(fullPath, sizeof(fullPath), "%sresources/shaders/%s", basePath, "TriangleBuffer.vert.spv");
+	SDL_snprintf(fullPath, sizeof(fullPath), "%sresources/shaders/%s", basePath, "transtest.vert.spv");
 	SDL_Log("%s\n", fullPath);
 	SDL_GPUShader* vertShader = GameShader::initShader(this->gpu, SDL_GPU_SHADERSTAGE_VERTEX, fullPath, 0, 1, 0, 0);
 	
@@ -174,17 +174,26 @@ GameRenderer::GameRenderer(){
 	
 	SDL_Log("%s\n", SDL_GetGPUDeviceDriver(this->gpu));
 
+	// this->translation = glm::mat4(1.0f);
+	// this->translation = glm::rotate(this->translation, glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	this->camera = new GameCamera();
+
 }
 
 void GameRenderer::render(){
 
-	float currentTime = (float)(SDL_GetTicks() - this->lastTime);
-	if (currentTime > 6000)
-	{
-		this->lastTime = SDL_GetTicks();
-	}
+	// float currentTime = (float)(SDL_GetTicks() - this->lastTime);
+	// if (currentTime > 6000)
+	// {
+	// 	this->lastTime = SDL_GetTicks();
+	// }
+	// int calcTime = ((int)currentTime) / 100;
+	// TempGarbo toSend = { (SDL_sin(calcTime) + 1.0f)/ 2.0f, 0, 0, 0};
+	// SDL_Log("%d\n", calcTime);
 	
-	int calcTime = ((int)currentTime) / 100;
+
+	// this->translation = glm::rotate(this->translation, glm::radians(1.0f), glm::vec3(0.0f, 1.0f, 1.0f));
+
 	SDL_GPUCommandBuffer* buff = SDL_AcquireGPUCommandBuffer(this->gpu);
 	if(buff == NULL) throw RendererException("Failed to acquire command buffer");
 
@@ -206,9 +215,8 @@ void GameRenderer::render(){
 	CTI.load_op = SDL_GPU_LOADOP_CLEAR;
 	CTI.store_op = SDL_GPU_STOREOP_STORE;
 
+	
 
-	TempGarbo toSend = { (SDL_sin(calcTime) + 1.0f)/ 2.0f, 0, 0, 0};
-	// SDL_Log("%d\n", calcTime);
 
 	SDL_GPURenderPass* render_pass = SDL_BeginGPURenderPass(buff, &CTI, 1, NULL);	//like photoshop layers
 
@@ -218,12 +226,14 @@ void GameRenderer::render(){
 
 	SDL_GPUBufferBinding buffBinding_index{.buffer = this->indexBuffer, .offset = 0};
 	SDL_BindGPUIndexBuffer(render_pass, &buffBinding_index, SDL_GPU_INDEXELEMENTSIZE_16BIT);
-	SDL_PushGPUVertexUniformData(buff, 0, &toSend, sizeof(toSend));
+	// SDL_PushGPUVertexUniformData(buff, 0, &toSend, sizeof(toSend));
+	SDL_PushGPUVertexUniformData(buff, 0, &this->camera->cameraMatrix, sizeof(this->camera->cameraMatrix));
 
 	SDL_DrawGPUIndexedPrimitives(render_pass, 6, 1, 0, 0, 0);
 	// SDL_DrawGPUPrimitives(render_pass, 3, 1, 0, 0);
-	
 
+	
+	
 	SDL_EndGPURenderPass(render_pass);
 
 	
@@ -241,4 +251,6 @@ GameRenderer::~GameRenderer(){
 	SDL_ReleaseGPUBuffer(this->gpu, this->indexBuffer);
 	SDL_DestroyWindow(this->window);
     SDL_DestroyGPUDevice(this->gpu);
+
+	delete this->camera;
 }
