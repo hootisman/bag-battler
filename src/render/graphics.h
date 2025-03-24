@@ -6,6 +6,7 @@
 #include <SDL3/SDL.h>
 #include <vector>
 #include <span>
+#include <map>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -48,8 +49,8 @@ public:
     GameRenderer();
     void render();
     ~GameRenderer();
-// private:
-//     SDL_GPUBuffer* createBuffer();
+private:
+    // std::map<const char*, SDL_GPUGraphicsPipeline*> graphicPipelines;
 };
 
 #endif
