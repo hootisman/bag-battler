@@ -34,7 +34,37 @@ void GameCamera::rotateModel(float x, float y, float z, float angle){
 }
 
 void GameCamera::updateSpeed(float deltaTime){
-    this->speed = 0.02f * deltaTime;
+    this->speed = 0.002f * deltaTime;
+}
+
+void GameCamera::dynamicMove(float deltaTime){
+    if(this->movementFlags.none()) return;
+    glm::vec3 velocity = glm::vec3(0.0f);
+    this->updateSpeed(deltaTime);
+
+    //why did i do this
+    if(this->movementFlags[3]){
+        //W key
+        velocity += this->speed * this->front;
+    }
+
+    if(this->movementFlags[2]){
+        //A key
+        velocity += -this->speed * glm::normalize(glm::cross(this->front, this->up));
+    }
+
+    if(this->movementFlags[1]){
+        //S key
+        velocity += -this->speed * this->front;
+    }
+
+    if(this->movementFlags[0]){
+        //D key
+        velocity += this->speed * glm::normalize(glm::cross(this->front, this->up));
+    }
+
+    this->pos += velocity;
+    this->updateView();
 }
 
 void GameCamera::moveCamera(float x, float y, float z){
