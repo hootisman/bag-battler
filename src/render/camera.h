@@ -17,7 +17,6 @@ public:
     GameCamera();
     void moveCamera(float, float, float);
     void moveCamera(Uint32, float);
-    void rotateCamera(float, float);
     void dynamicMove(float);    //bitflag param
     void updateSpeed(float);
     void updateDirection(float, float);

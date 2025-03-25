@@ -28,9 +28,7 @@ GameCamera::GameCamera(){
     this->proj = glm::mat4(1.0f);
 
     this->model = glm::rotate(this->model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
     this->view = glm::lookAt(this->pos, this->pos + this->front, this->up);
-
     this->proj = glm::perspective(glm::radians(45.0f), (float)640 / (float)480, 0.1f, 100.0f);
 }
 
@@ -88,9 +86,6 @@ void GameCamera::dynamicMove(float deltaTime){
     this->updateView();
 }
 
-void GameCamera::rotateCamera(float yaw, float pitch){
-
-}
 
 void GameCamera::moveCamera(float x, float y, float z){
     this->view = glm::translate(this->view, glm::vec3(x, y, z));
