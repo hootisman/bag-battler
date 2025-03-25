@@ -6,7 +6,7 @@
 #include <SDL3/SDL.h>
 #include <vector>
 #include <span>
-#include <map>
+#include <unordered_map>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -19,19 +19,6 @@ typedef struct PosColorVertex{
     float x,y,z;
     Uint8 r,g,b,a;
 } PosColorVertex;
-
-class GameShader{
-public:
-    static SDL_GPUShader* initShader(const char*, SDL_GPUDevice*, SDL_GPUShaderStage, Uint32, Uint32, Uint32, Uint32);
-    static void configurePipelineInfo(
-        SDL_GPUGraphicsPipelineCreateInfo*,
-        std::span<SDL_GPUVertexBufferDescription>,
-        std::span<SDL_GPUVertexAttribute>,
-        std::span<SDL_GPUColorTargetDescription>,
-        SDL_GPUShader*,
-        SDL_GPUShader*
-    );
-};
 
 
 class GameRenderer{
@@ -46,11 +33,19 @@ public:
     GameCamera* camera;
     bool isWireframe;
 
+    static SDL_GPUShader* initShader(const char*, SDL_GPUDevice*, SDL_GPUShaderStage, Uint32, Uint32, Uint32, Uint32);
+    static void configurePipelineInfo(
+        SDL_GPUGraphicsPipelineCreateInfo*, std::span<SDL_GPUVertexBufferDescription>, std::span<SDL_GPUVertexAttribute>,
+        std::span<SDL_GPUColorTargetDescription>, SDL_GPUShader*, SDL_GPUShader*
+    );
+
     GameRenderer();
+    void buildGraphicsPipeline(std::string, SDL_GPUGraphicsPipelineCreateInfo&);
+    SDL_GPUGraphicsPipeline* getGraphicsPipeline(std::string);
     void render();
     ~GameRenderer();
 private:
-    // std::map<const char*, SDL_GPUGraphicsPipeline*> graphicPipelines;
+    std::unordered_map<std::string, SDL_GPUGraphicsPipeline*> graphicPipelines;
 };
 
 #endif

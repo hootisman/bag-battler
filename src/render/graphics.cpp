@@ -1,7 +1,7 @@
 #include "graphics.h"
 
 
-SDL_GPUShader* GameShader::initShader(
+SDL_GPUShader* GameRenderer::initShader(
 	const char* fileName,
 	SDL_GPUDevice* gpu, SDL_GPUShaderStage stage, 
 	Uint32 sampler, Uint32 uniformBuffer, 
@@ -9,16 +9,16 @@ SDL_GPUShader* GameShader::initShader(
 ){
 	const char* entryPoint = "main";	//todo entrypoint and format different per system
 	SDL_GPUShaderFormat format = SDL_GPU_SHADERFORMAT_SPIRV;
-
-	/* io stuff */
 	const char* basePath = SDL_GetBasePath();
 	char fullPath[256];
+	size_t fileSize;
+	void* file;
 
+	/* io stuff */
 	SDL_snprintf(fullPath, sizeof(fullPath), "%s%s%s", basePath, SHADER_RESOURCE_PATH, fileName);
 	SDL_Log("%s\n", fullPath);
 
-	size_t fileSize;
-	void* file = SDL_LoadFile(fullPath, &fileSize);
+	file = SDL_LoadFile(fullPath, &fileSize);
 	if(file == NULL) throw RendererException("Error loading file");
 
 	SDL_GPUShaderCreateInfo info = {
@@ -34,16 +34,14 @@ SDL_GPUShader* GameShader::initShader(
 		.props = 0
 	};
 	SDL_GPUShader* shader = SDL_CreateGPUShader(gpu, &info);
-
 	if (shader == NULL) {SDL_free(file); throw RendererException("Error creating shader from file");}
-
 	SDL_free(file);
-	return shader;
 
+	return shader;
 }
 
 
-void GameShader::configurePipelineInfo(
+void GameRenderer::configurePipelineInfo(
 	SDL_GPUGraphicsPipelineCreateInfo* pipelineInfo,
 	std::span<SDL_GPUVertexBufferDescription> vertexDesc,
 	std::span<SDL_GPUVertexAttribute> vertexAttr,
@@ -69,30 +67,31 @@ void GameShader::configurePipelineInfo(
 
 GameRenderer::GameRenderer(){
 	this->isWireframe = false;
+	this->graphicPipelines = {};
 
+	/* Create SDL */
 	if(!SDL_Init(SDL_INIT_VIDEO)) throw RendererException("Failed to init SDL");
 
-	//window
+	/* Create Window*/
 	this->window = SDL_CreateWindow( "hi", SCREEN_W, SCREEN_H, 0);
 	if(!this->window) throw RendererException("Error creating window");
 
-	//gpu
+	/* Create GPU Device*/
 	this->gpu = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV, false, NULL);
 	if(!this->gpu) throw RendererException("Error creating gpu device");
 
 	//bind gpu to window
 	if(!SDL_ClaimWindowForGPUDevice(this->gpu, this->window)) throw RendererException("Error binding gpu to window");
 
-	SDL_GPUShader* vertShader = GameShader::initShader("transtest.vert.spv", this->gpu, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
-	SDL_GPUShader* fragShader = GameShader::initShader("SolidColor.frag.spv", this->gpu, SDL_GPU_SHADERSTAGE_FRAGMENT, 0, 0, 0, 0);
+	SDL_GPUShader* vertShader = GameRenderer::initShader("transtest.vert.spv", this->gpu, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
+	SDL_GPUShader* fragShader = GameRenderer::initShader("SolidColor.frag.spv", this->gpu, SDL_GPU_SHADERSTAGE_FRAGMENT, 0, 0, 0, 0);
 
-	//todo move to pipeline creation function
 	SDL_GPUVertexAttribute vertexAttr[] = {{0, 0, SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3, 0}, {1, 0, SDL_GPU_VERTEXELEMENTFORMAT_UBYTE4_NORM, sizeof(float) * 3}};
 	SDL_GPUVertexBufferDescription vertexDesc[] = {0, sizeof(PosColorVertex), SDL_GPU_VERTEXINPUTRATE_VERTEX, 0};
 	SDL_GPUColorTargetDescription colorTargetDesc[] = {SDL_GetGPUSwapchainTextureFormat(this->gpu, this->window)};
 	SDL_GPUGraphicsPipelineCreateInfo pipelineInfo = {};
 
-	GameShader::configurePipelineInfo(
+	GameRenderer::configurePipelineInfo(
 		&pipelineInfo,
 		vertexDesc,
 		vertexAttr,
@@ -211,16 +210,31 @@ void GameRenderer::render(){
 
 	SDL_DrawGPUIndexedPrimitives(render_pass, 6, 1, 0, 0, 0);
 	// SDL_DrawGPUPrimitives(render_pass, 3, 1, 0, 0);
-
-	
 	
 	SDL_EndGPURenderPass(render_pass);
-
-	
-	
 	
 	if(!SDL_SubmitGPUCommandBuffer(buff)) throw RendererException("Failed to submit command buffer");
 	
+}
+
+void GameRenderer::buildGraphicsPipeline(std::string key, SDL_GPUGraphicsPipelineCreateInfo& config){
+
+	if (!this->graphicPipelines.contains(key)){
+		this->graphicPipelines[key] = SDL_CreateGPUGraphicsPipeline(this->gpu, &config);
+	}else{
+		SDL_Log("error: graphics pipeline with key %s exists!", key);
+	}
+
+}
+
+SDL_GPUGraphicsPipeline* GameRenderer::getGraphicsPipeline(std::string key){
+	SDL_GPUGraphicsPipeline* pipeline = nullptr;
+	try{
+		pipeline = this->graphicPipelines.at(key);
+	}catch(std::out_of_range e){
+		SDL_Log("%s\nCould not find pipeline with key \'%s\'", e.what(), key);
+	}
+	return pipeline;
 }
 
 GameRenderer::~GameRenderer(){
