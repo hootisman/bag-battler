@@ -8,16 +8,19 @@
 
 class GameCamera{
 public:
-    glm::vec3 pos, dir, right, up, front;
+    glm::vec3 pos, right, up, front;
     std::bitset<4> movementFlags;
     float speed;
+    float yaw, pitch;
 
 
     GameCamera();
     void moveCamera(float, float, float);
     void moveCamera(Uint32, float);
+    void rotateCamera(float, float);
     void dynamicMove(float);    //bitflag param
     void updateSpeed(float);
+    void updateDirection(float, float);
     void rotateModel(float, float, float, float);
     glm::mat4 getCameraMatrix();
     ~GameCamera();

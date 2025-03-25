@@ -3,6 +3,9 @@
 
 
 GameCamera::GameCamera(){
+    this->yaw = -90.0f;
+    this->pitch = 0.0f;
+
     /* Camera Speed*/
     this->speed = 0.05f;
 
@@ -10,12 +13,14 @@ GameCamera::GameCamera(){
     this->pos = glm::vec3(0.0f, 0.0f, 3.0f);
 
     /* Camera right vector */
-    this->dir = glm::normalize(this->pos - glm::vec3(0, 0, 0));
-    this->right = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), this->dir));
+    glm::vec3 direction = glm::normalize(this->pos - glm::vec3(0, 0, 0));
+    this->right = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), direction));
 
     /* Camera up vector*/
-    this->up = glm::cross(this->dir, this->right);
+    this->up = glm::cross(direction, this->right);
     this->front = glm::vec3(0.0f, 0.0f, -1.0f);
+
+    /* Camera Direction*/
 
     /* Init matrices */
     this->model = glm::mat4(1.0f);
@@ -34,7 +39,23 @@ void GameCamera::rotateModel(float x, float y, float z, float angle){
 }
 
 void GameCamera::updateSpeed(float deltaTime){
-    this->speed = 0.002f * deltaTime;
+    this->speed = 0.004f * deltaTime;
+}
+
+void GameCamera::updateDirection(float deltaYaw, float deltaPitch){
+    this->yaw += deltaYaw * 0.1f;
+    this->pitch += -deltaPitch * 0.1f;
+
+    
+
+    glm::vec3 direction;
+
+    direction.x = SDL_cosf(glm::radians(this->yaw)) * SDL_cosf(glm::radians(this->pitch));
+    direction.y = SDL_sinf(glm::radians(this->pitch));
+    direction.z = SDL_sinf(glm::radians(this->yaw)) * SDL_cosf(glm::radians(this->pitch));
+
+    this->front = glm::normalize(direction);
+    this->updateView();
 }
 
 void GameCamera::dynamicMove(float deltaTime){
@@ -65,6 +86,10 @@ void GameCamera::dynamicMove(float deltaTime){
 
     this->pos += velocity;
     this->updateView();
+}
+
+void GameCamera::rotateCamera(float yaw, float pitch){
+
 }
 
 void GameCamera::moveCamera(float x, float y, float z){

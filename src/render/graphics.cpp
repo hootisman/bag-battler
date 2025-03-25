@@ -190,7 +190,7 @@ void GameRenderer::render(){
 
 	SDL_GPUColorTargetInfo CTI = { 0 };
 	CTI.texture = swapchainTex;
-	CTI.clear_color = (SDL_FColor){0.0f, 0.0f, 0.0f, 1.0f};
+	CTI.clear_color = (SDL_FColor){0.0f, 0.5f, 0.8f, 1.0f};
 	CTI.load_op = SDL_GPU_LOADOP_CLEAR;
 	CTI.store_op = SDL_GPU_STOREOP_STORE;
 

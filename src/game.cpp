@@ -2,6 +2,7 @@
 
 Game::Game(){
     this->isGameRunning = true;
+	this->isMouseHeld = false;
     this->renderer = new GameRenderer();
 
 	this->deltaTime = 0.0f;
@@ -38,7 +39,7 @@ void Game::keyDownHandler(SDL_KeyboardEvent& e){
 		return;
 	}
 	this->heldKeys.insert(e.key);
-	this->printHeldKeys();
+	// this->printHeldKeys();
 }
 
 void Game::keyUpHandler(SDL_KeyboardEvent& e){
@@ -60,8 +61,19 @@ void Game::keyUpHandler(SDL_KeyboardEvent& e){
 		return;
 	}
 	this->heldKeys.erase(e.key);
-	this->printHeldKeys();
+	// this->printHeldKeys();
 
+}
+
+void Game::mouseButtonHandler(SDL_MouseButtonEvent& e){
+	SDL_Log("Button %f, %f", e.x, e.y);
+	this->isMouseHeld = e.down;
+	SDL_SetWindowRelativeMouseMode(this->renderer->window, e.down);
+}
+
+void Game::mouseMotionHandler(SDL_MouseMotionEvent& e){
+	SDL_Log("Motion %f %f, %f %f", e.x, e.y, e.xrel, e.yrel);	//todo relative is what values moved during motion, please use for adjusting pitch + yaw!
+	if (this->isMouseHeld) this->renderer->camera->updateDirection(e.xrel, e.yrel);
 }
 
 void Game::printHeldKeys(){
@@ -102,6 +114,13 @@ void Game::eventLoop(){
 			break;
 		case SDL_EVENT_KEY_UP:
 			this->keyUpHandler(event.key);
+			break;
+		case SDL_EVENT_MOUSE_BUTTON_DOWN:
+		case SDL_EVENT_MOUSE_BUTTON_UP:
+			this->mouseButtonHandler(event.button);
+			break;
+		case SDL_EVENT_MOUSE_MOTION:
+			this->mouseMotionHandler(event.motion);
 			break;
 		
 		default:
