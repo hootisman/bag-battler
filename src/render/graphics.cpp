@@ -1,4 +1,5 @@
 #include "graphics.h"
+#include "shape.h"
 
 
 SDL_GPUShader* GameRenderer::initShader(
@@ -41,8 +42,8 @@ SDL_GPUShader* GameRenderer::initShader(
 }
 
 
-void GameRenderer::configurePipelineInfo(
-	SDL_GPUGraphicsPipelineCreateInfo* pipelineInfo,
+SDL_GPUGraphicsPipelineCreateInfo GameRenderer::createPipelineConfig(
+	SDL_GPUPrimitiveType primType,
 	std::span<SDL_GPUVertexBufferDescription> vertexDesc,
 	std::span<SDL_GPUVertexAttribute> vertexAttr,
 	std::span<SDL_GPUColorTargetDescription> colorTarget,
@@ -50,24 +51,24 @@ void GameRenderer::configurePipelineInfo(
 	SDL_GPUShader* fragShader
 ){
 
-	(*pipelineInfo) = {
+	SDL_GPUGraphicsPipelineCreateInfo pipelineInfo = {
 		.vertex_shader = vertShader,
 		.fragment_shader = fragShader,
-		.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
+		.vertex_input_state = {
+			.vertex_buffer_descriptions = vertexDesc.data(),
+			.num_vertex_buffers = (Uint32)vertexDesc.size(),
+			.vertex_attributes = vertexAttr.data(),
+			.num_vertex_attributes = (Uint32)vertexAttr.size()
+		},
+		.primitive_type = primType,
 		.target_info = {.color_target_descriptions = colorTarget.data(), .num_color_targets = (Uint32)colorTarget.size()}
 	};
 
-	pipelineInfo->vertex_input_state = {
-		.vertex_buffer_descriptions = vertexDesc.data(),
-		.num_vertex_buffers = (Uint32)vertexDesc.size(),
-		.vertex_attributes = vertexAttr.data(),
-		.num_vertex_attributes = (Uint32)vertexAttr.size()
-	};
+	return pipelineInfo;
 }
 
 GameRenderer::GameRenderer(){
 	this->isWireframe = false;
-	this->graphicPipelines = {};
 
 	/* Create SDL */
 	if(!SDL_Init(SDL_INIT_VIDEO)) throw RendererException("Failed to init SDL");
@@ -83,33 +84,7 @@ GameRenderer::GameRenderer(){
 	//bind gpu to window
 	if(!SDL_ClaimWindowForGPUDevice(this->gpu, this->window)) throw RendererException("Error binding gpu to window");
 
-	SDL_GPUShader* vertShader = GameRenderer::initShader("transtest.vert.spv", this->gpu, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
-	SDL_GPUShader* fragShader = GameRenderer::initShader("SolidColor.frag.spv", this->gpu, SDL_GPU_SHADERSTAGE_FRAGMENT, 0, 0, 0, 0);
-
-	SDL_GPUVertexAttribute vertexAttr[] = {{0, 0, SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3, 0}, {1, 0, SDL_GPU_VERTEXELEMENTFORMAT_UBYTE4_NORM, sizeof(float) * 3}};
-	SDL_GPUVertexBufferDescription vertexDesc[] = {0, sizeof(PosColorVertex), SDL_GPU_VERTEXINPUTRATE_VERTEX, 0};
-	SDL_GPUColorTargetDescription colorTargetDesc[] = {SDL_GetGPUSwapchainTextureFormat(this->gpu, this->window)};
-	SDL_GPUGraphicsPipelineCreateInfo pipelineInfo = {};
-
-	GameRenderer::configurePipelineInfo(
-		&pipelineInfo,
-		vertexDesc,
-		vertexAttr,
-		colorTargetDesc,
-		vertShader,
-		fragShader
-	);
-
-	pipelineInfo.rasterizer_state.fill_mode = SDL_GPU_FILLMODE_FILL;
-	this->fillPipeline = SDL_CreateGPUGraphicsPipeline(this->gpu, &pipelineInfo);
-	if (fillPipeline == NULL) throw RendererException("Failed to create Fill Pipeline");
-
-	pipelineInfo.rasterizer_state.fill_mode = SDL_GPU_FILLMODE_LINE;
-	this->linePipeline = SDL_CreateGPUGraphicsPipeline(this->gpu, &pipelineInfo);
-	if (linePipeline == NULL) throw RendererException("Failed to create line pipeline");
-
-	SDL_ReleaseGPUShader(this->gpu, vertShader);
-	SDL_ReleaseGPUShader(this->gpu, fragShader);
+	this->shapeRenderer = new ShapeRenderer(this);
 
 	Uint32 vertexBSize = sizeof(PosColorVertex) * 4;
 	Uint32 indexBSize = sizeof(Uint16) * 6;
@@ -194,13 +169,15 @@ void GameRenderer::render(){
 	CTI.store_op = SDL_GPU_STOREOP_STORE;
 
 	
-	this->camera->rotateModel(1.0f, 0.8f, 0.0f, 0.6f);
+	//this->camera->rotateModel(1.0f, 0.8f, 0.0f, 0.6f);
 	glm::mat4 cameraMatrix = this->camera->getCameraMatrix();
 	
 
 	SDL_GPURenderPass* render_pass = SDL_BeginGPURenderPass(buff, &CTI, 1, NULL);	//like photoshop layers
 
-	SDL_BindGPUGraphicsPipeline(render_pass, this->isWireframe ? this->linePipeline : this->fillPipeline); 
+	std::string pipelineKey = this->isWireframe ? ShapeRenderer::wireframeKey : ShapeRenderer::pipelineKey;
+
+	SDL_BindGPUGraphicsPipeline(render_pass, this->getGraphicsPipeline(pipelineKey)); 
 	SDL_GPUBufferBinding buffBinding{.buffer = this->vertexBuffer, .offset = 0};
 	SDL_BindGPUVertexBuffers(render_pass, 0, &buffBinding, 1);
 
@@ -237,9 +214,15 @@ SDL_GPUGraphicsPipeline* GameRenderer::getGraphicsPipeline(std::string key){
 	return pipeline;
 }
 
+void GameRenderer::releasePipelines(){
+	for(const auto& [key, pipeline] : this->graphicPipelines){
+		SDL_Log("Releasing %s" , key.c_str());
+		SDL_ReleaseGPUGraphicsPipeline(this->gpu, pipeline);
+	}
+}
+
 GameRenderer::~GameRenderer(){
-	SDL_ReleaseGPUGraphicsPipeline(this->gpu, fillPipeline);
-	SDL_ReleaseGPUGraphicsPipeline(this->gpu, linePipeline);
+	this->releasePipelines();
 	SDL_ReleaseWindowFromGPUDevice(this->gpu, this->window);
 	SDL_ReleaseGPUBuffer(this->gpu, this->vertexBuffer);
 	SDL_ReleaseGPUBuffer(this->gpu, this->indexBuffer);
@@ -247,4 +230,7 @@ GameRenderer::~GameRenderer(){
     SDL_DestroyGPUDevice(this->gpu);
 
 	delete this->camera;
+	delete this->shapeRenderer;
 }
+
+

@@ -2,24 +2,29 @@
 #define SHAPE_H
 #include <SDL3/SDL.h>
 #include <string>
-#include "graphics.h"
+
+
+class GameRenderer;
+
 
 class ShapeRenderer{
 public:
-    const std::string graphicsPipelineKey = "PIPE";
-    const std::string wireframeKey = "WIREFRAME";
 
+    inline static const std::string pipelineKey = "PIPE";
+    inline static const std::string wireframeKey = "WIREFRAME";
 
-
-
-private:
-    SDL_GPUGraphicsPipelineCreateInfo config, wireframeConfig;
     GameRenderer* gameRenderer;
 
 
-    ShapeRenderer();
+    ShapeRenderer(GameRenderer*);
+    void render();
+    void renderCamera();
     ~ShapeRenderer();
-};
 
+private:
+    SDL_GPUGraphicsPipelineCreateInfo config, wireframeConfig;
+
+    void initPipelines();
+};
 
 #endif
