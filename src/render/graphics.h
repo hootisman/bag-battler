@@ -21,15 +21,33 @@ typedef struct PosColorVertex{
     Uint8 r,g,b,a;
 } PosColorVertex;
 
+typedef struct GameBuffer {
+    SDL_GPUBuffer* buffer;
+    SDL_GPUBufferCreateInfo info;
 
+    GameBuffer() {}
+    GameBuffer(SDL_GPUDevice*, SDL_GPUBufferUsageFlags, Uint32);
+
+} GameBuffer;
+
+typedef struct GameTransferBuffer {
+    SDL_GPUTransferBuffer* buffer;
+    SDL_GPUTransferBufferCreateInfo info;
+
+    GameTransferBuffer() {}
+    GameTransferBuffer(SDL_GPUDevice*, SDL_GPUTransferBufferUsage, Uint32);
+    void loadTransferBuffer(SDL_GPUDevice*, void*, Uint32);
+
+} GameTransferBuffer;
 
 class GameRenderer{
 public:
     SDL_Window* window;
     SDL_Surface* screenSurface;
     SDL_GPUDevice* gpu;
-    SDL_GPUBuffer* vertexBuffer;
-    SDL_GPUBuffer* indexBuffer;
+    // SDL_GPUBuffer* vertexBuffer;
+    // SDL_GPUBuffer* indexBuffer;
+    GameBuffer vertexBuffer, indexBuffer;
     GameCamera* camera;
     bool isWireframe;
     ShapeRenderer* shapeRenderer;
