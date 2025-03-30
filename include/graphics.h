@@ -52,8 +52,6 @@ public:
     SDL_Window* window;
     SDL_Surface* screenSurface;
     SDL_GPUDevice* gpu;
-    // SDL_GPUBuffer* vertexBuffer;
-    // SDL_GPUBuffer* indexBuffer;
     GameBuffer* vertexBuffer;
     GameBuffer* indexBuffer;
     GameCamera* camera;

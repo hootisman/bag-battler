@@ -1,6 +1,6 @@
 #ifndef GAME_H
 #define GAME_H
-#include "render/graphics.h"
+#include "graphics.h"
 #include <unordered_set>
 #include <string>
 

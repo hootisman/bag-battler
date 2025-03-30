@@ -1,5 +1,5 @@
 #include "graphics.h"
-#include "shape.h"
+#include "shaper.h"
 
 /* GameBuffer */
 GameBuffer::GameBuffer(SDL_GPUDevice* gpu, SDL_GPUBufferUsageFlags usage, Uint32 size) {
