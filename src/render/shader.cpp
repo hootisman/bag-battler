@@ -1,5 +1,5 @@
-#include "graphics.h"
-#include "shader.h"
+#include "render/graphics.h"
+#include "render/shader.h"
 
 
 void GameShader::initPipelines(){

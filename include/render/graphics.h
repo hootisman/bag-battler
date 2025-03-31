@@ -2,7 +2,8 @@
 #define GRAPHICS_H
 
 #include "debug.h"
-#include "camera.h"
+#include "util.h"
+#include "render/camera.h"
 #include <SDL3/SDL.h>
 #include <vector>
 #include <span>
@@ -12,9 +13,9 @@
 
 class GameShader;
 
-#define SCREEN_W 640
-#define SCREEN_H 480
-#define SHADER_RESOURCE_PATH "resources/shaders/"
+// #define SCREEN_W 640
+// #define SCREEN_H 480
+// #define SHADER_RESOURCE_PATH "resources/shaders/"
 
 typedef struct PosColorVertex{
     float x,y,z;
@@ -58,7 +59,7 @@ namespace GameRenderer{
     inline GameShader* shapeRenderer;
     inline std::unordered_map<std::string, SDL_GPUGraphicsPipeline*> graphicPipelines;
 
-    SDL_GPUShader* initShader(const char*, SDL_GPUDevice*, SDL_GPUShaderStage, Uint32, Uint32, Uint32, Uint32);
+    SDL_GPUShader* initShader(std::string, SDL_GPUDevice*, SDL_GPUShaderStage, Uint32, Uint32, Uint32, Uint32);
     SDL_GPUGraphicsPipelineCreateInfo createPipelineConfig(
         SDL_GPUPrimitiveType, std::span<SDL_GPUVertexBufferDescription>, std::span<SDL_GPUVertexAttribute>,
         std::span<SDL_GPUColorTargetDescription>, SDL_GPUShader*, SDL_GPUShader*

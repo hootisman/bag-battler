@@ -4,17 +4,11 @@
 #include <string>
 
 
-// class GameRenderer;
-
 
 class GameShader{
 public:
-
     inline static const std::string pipelineKey = "PIPE";
     inline static const std::string wireframeKey = "WIREFRAME";
-
-    // GameRenderer* gameRenderer;
-
 
     GameShader();
     void render();

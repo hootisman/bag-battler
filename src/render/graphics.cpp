@@ -1,5 +1,5 @@
-#include "graphics.h"
-#include "shader.h"
+#include "render/graphics.h"
+#include "render/shader.h"
 
 /* GameBuffer */
 GameBuffer::GameBuffer(SDL_GPUDevice* gpu, SDL_GPUBufferUsageFlags usage, Uint32 size) {
@@ -47,24 +47,21 @@ GameTransferBuffer::~GameTransferBuffer(){
 	SDL_ReleaseGPUTransferBuffer(this->gpu, this->buffer);
 }
 
+/* GameRenderer */
 SDL_GPUShader* GameRenderer::initShader(
-	const char* fileName,
+	std::string fileName,
 	SDL_GPUDevice* gpu, SDL_GPUShaderStage stage, 
 	Uint32 sampler, Uint32 uniformBuffer, 
 	Uint32 storageBuffer, Uint32 storageTexture
 ){
 	const char* entryPoint = "main";	//todo entrypoint and format different per system
 	SDL_GPUShaderFormat format = SDL_GPU_SHADERFORMAT_SPIRV;
-	const char* basePath = SDL_GetBasePath();
-	char fullPath[256];
+	std::string fullPath = GameUtil::buildFilePath(GameUtil::SHADER_RESOURCE_PATH, fileName);
+
 	size_t fileSize;
 	void* file;
 
-	/* io stuff */
-	SDL_snprintf(fullPath, sizeof(fullPath), "%s%s%s", basePath, SHADER_RESOURCE_PATH, fileName);
-	SDL_Log("%s\n", fullPath);
-
-	file = SDL_LoadFile(fullPath, &fileSize);
+	file = SDL_LoadFile(fullPath.c_str(), &fileSize);
 	if(file == NULL) throw RendererException("Error loading file");
 
 	SDL_GPUShaderCreateInfo info = {
@@ -118,7 +115,7 @@ void GameRenderer::initRenderer(){
 	if(!SDL_Init(SDL_INIT_VIDEO)) throw RendererException("Failed to init SDL");
 
 	/* Create Window*/
-	GameRenderer::window = SDL_CreateWindow( "hi", SCREEN_W, SCREEN_H, 0);
+	GameRenderer::window = SDL_CreateWindow( "hi", GameUtil::SCREEN_W, GameUtil::SCREEN_H, 0);
 	if(!GameRenderer::window) throw RendererException("Error creating window");
 
 	/* Create GPU Device*/
