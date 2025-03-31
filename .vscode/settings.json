@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "span": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "unordered_map": "cpp"
     }
 }

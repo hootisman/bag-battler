@@ -6,7 +6,6 @@
 
 class Game{
 public:
-    GameRenderer* renderer;
     std::unordered_set<Uint32> heldKeys;    //todo: remove
     
     bool isGameRunning, isMouseHeld;

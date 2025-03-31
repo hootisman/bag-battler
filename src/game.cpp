@@ -3,7 +3,8 @@
 Game::Game(){
     this->isGameRunning = true;
 	this->isMouseHeld = false;
-    this->renderer = new GameRenderer();
+
+	GameRenderer::initRenderer();
 
 	this->deltaTime = 0.0f;
 	this->lastFrame = 0.0f;
@@ -16,23 +17,23 @@ void Game::keyDownHandler(SDL_KeyboardEvent& e){
         this->isGameRunning = false;
 		break;
 	case SDLK_P:
-		this->renderer->isWireframe = !this->renderer->isWireframe;
+		GameRenderer::isWireframe = !GameRenderer::isWireframe;
 		break;
 	case SDLK_W:
-		// this->renderer->camera->moveCamera(SDLK_W, this->deltaTime);
-		this->renderer->camera->movementFlags.set(3);
+		// GameRenderer::camera->moveCamera(SDLK_W, this->deltaTime);
+		GameRenderer::camera->movementFlags.set(3);
 		break;
 	case SDLK_A:
-		// this->renderer->camera->moveCamera(SDLK_A, this->deltaTime);
-		this->renderer->camera->movementFlags.set(2);
+		// GameRenderer::camera->moveCamera(SDLK_A, this->deltaTime);
+		GameRenderer::camera->movementFlags.set(2);
 		break;
 	case SDLK_S:
-		// this->renderer->camera->moveCamera(SDLK_S, this->deltaTime);
-		this->renderer->camera->movementFlags.set(1);
+		// GameRenderer::camera->moveCamera(SDLK_S, this->deltaTime);
+		GameRenderer::camera->movementFlags.set(1);
 		break;
 	case SDLK_D:
-		// this->renderer->camera->moveCamera(SDLK_D, this->deltaTime);
-		this->renderer->camera->movementFlags.set(0);
+		// GameRenderer::camera->moveCamera(SDLK_D, this->deltaTime);
+		GameRenderer::camera->movementFlags.set(0);
 		break;
 	
 	default:
@@ -45,16 +46,16 @@ void Game::keyDownHandler(SDL_KeyboardEvent& e){
 void Game::keyUpHandler(SDL_KeyboardEvent& e){
 	switch (e.key){
 	case SDLK_W:
-		this->renderer->camera->movementFlags.reset(3);
+		GameRenderer::camera->movementFlags.reset(3);
 		break;
 	case SDLK_A:
-		this->renderer->camera->movementFlags.reset(2);
+		GameRenderer::camera->movementFlags.reset(2);
 		break;
 	case SDLK_S:
-		this->renderer->camera->movementFlags.reset(1);
+		GameRenderer::camera->movementFlags.reset(1);
 		break;
 	case SDLK_D:
-		this->renderer->camera->movementFlags.reset(0);
+		GameRenderer::camera->movementFlags.reset(0);
 		break;
 	
 	default:
@@ -67,11 +68,11 @@ void Game::keyUpHandler(SDL_KeyboardEvent& e){
 
 void Game::mouseButtonHandler(SDL_MouseButtonEvent& e){
 	this->isMouseHeld = e.down;
-	SDL_SetWindowRelativeMouseMode(this->renderer->window, e.down);
+	SDL_SetWindowRelativeMouseMode(GameRenderer::window, e.down);
 }
 
 void Game::mouseMotionHandler(SDL_MouseMotionEvent& e){
-	if (this->isMouseHeld) this->renderer->camera->updateDirection(e.xrel, e.yrel);
+	if (this->isMouseHeld) GameRenderer::camera->updateDirection(e.xrel, e.yrel);
 }
 
 void Game::printHeldKeys(){
@@ -80,7 +81,7 @@ void Game::printHeldKeys(){
 }
 
 void Game::updateCamera(){
-	this->renderer->camera->dynamicMove(this->deltaTime);
+	GameRenderer::camera->dynamicMove(this->deltaTime);
 }
 
 void Game::updateDeltaTime(){
@@ -95,7 +96,7 @@ void Game::gameLoop(){
 		this->updateDeltaTime();
 		this->updateCamera();
 		this->eventLoop();
-		this->renderer->render();
+		GameRenderer::render();
 		
 	}
 }
@@ -128,5 +129,5 @@ void Game::eventLoop(){
 }
 
 Game::~Game(){
-    delete this->renderer;
+	GameRenderer::closeRenderer();
 }

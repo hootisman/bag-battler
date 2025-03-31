@@ -9,7 +9,8 @@
 #include <unordered_map>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-class ShapeRenderer;
+
+class GameShader;
 
 #define SCREEN_W 640
 #define SCREEN_H 480
@@ -46,31 +47,29 @@ typedef struct GameTransferBuffer {
 
 } GameTransferBuffer;
 
-class GameRenderer{
-public:
-    SDL_Window* window;
-    SDL_Surface* screenSurface;
-    SDL_GPUDevice* gpu;
-    GameBuffer* vertexBuffer;
-    GameBuffer* indexBuffer;
-    GameCamera* camera;
-    bool isWireframe;
-    ShapeRenderer* shapeRenderer;
+namespace GameRenderer{
+    inline SDL_Window* window;
+    inline SDL_Surface* screenSurface;
+    inline SDL_GPUDevice* gpu;
+    inline GameCamera* camera;
+    inline GameBuffer* vertexBuffer;
+    inline GameBuffer* indexBuffer;
+    inline bool isWireframe;
+    inline GameShader* shapeRenderer;
+    inline std::unordered_map<std::string, SDL_GPUGraphicsPipeline*> graphicPipelines;
 
-    static SDL_GPUShader* initShader(const char*, SDL_GPUDevice*, SDL_GPUShaderStage, Uint32, Uint32, Uint32, Uint32);
-    static SDL_GPUGraphicsPipelineCreateInfo createPipelineConfig(
+    SDL_GPUShader* initShader(const char*, SDL_GPUDevice*, SDL_GPUShaderStage, Uint32, Uint32, Uint32, Uint32);
+    SDL_GPUGraphicsPipelineCreateInfo createPipelineConfig(
         SDL_GPUPrimitiveType, std::span<SDL_GPUVertexBufferDescription>, std::span<SDL_GPUVertexAttribute>,
         std::span<SDL_GPUColorTargetDescription>, SDL_GPUShader*, SDL_GPUShader*
     );
     void buildGraphicsPipeline(std::string, SDL_GPUGraphicsPipelineCreateInfo&);
     SDL_GPUGraphicsPipeline* getGraphicsPipeline(std::string);
-
-    GameRenderer();
+    void initRenderer();
     void render();
-    ~GameRenderer();
-private:
-    std::unordered_map<std::string, SDL_GPUGraphicsPipeline*> graphicPipelines;
-
+    void closeRenderer();
     void releasePipelines();
+
+    
 };
 #endif

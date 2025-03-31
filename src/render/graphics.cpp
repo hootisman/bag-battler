@@ -1,5 +1,5 @@
 #include "graphics.h"
-#include "shaper.h"
+#include "shader.h"
 
 /* GameBuffer */
 GameBuffer::GameBuffer(SDL_GPUDevice* gpu, SDL_GPUBufferUsageFlags usage, Uint32 size) {
@@ -47,7 +47,6 @@ GameTransferBuffer::~GameTransferBuffer(){
 	SDL_ReleaseGPUTransferBuffer(this->gpu, this->buffer);
 }
 
-/* GameRenderer */
 SDL_GPUShader* GameRenderer::initShader(
 	const char* fileName,
 	SDL_GPUDevice* gpu, SDL_GPUShaderStage stage, 
@@ -113,32 +112,32 @@ SDL_GPUGraphicsPipelineCreateInfo GameRenderer::createPipelineConfig(
 	return pipelineInfo;
 }
 
-GameRenderer::GameRenderer(){
+void GameRenderer::initRenderer(){
 
 	/* Create SDL */
 	if(!SDL_Init(SDL_INIT_VIDEO)) throw RendererException("Failed to init SDL");
 
 	/* Create Window*/
-	this->window = SDL_CreateWindow( "hi", SCREEN_W, SCREEN_H, 0);
-	if(!this->window) throw RendererException("Error creating window");
+	GameRenderer::window = SDL_CreateWindow( "hi", SCREEN_W, SCREEN_H, 0);
+	if(!GameRenderer::window) throw RendererException("Error creating window");
 
 	/* Create GPU Device*/
-	this->gpu = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV, false, NULL);
-	if(!this->gpu) throw RendererException("Error creating gpu device");
+	GameRenderer::gpu = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV, false, NULL);
+	if(!GameRenderer::gpu) throw RendererException("Error creating gpu device");
 
 	//bind gpu to window
-	if(!SDL_ClaimWindowForGPUDevice(this->gpu, this->window)) throw RendererException("Error binding gpu to window");
+	if(!SDL_ClaimWindowForGPUDevice(GameRenderer::gpu, GameRenderer::window)) throw RendererException("Error binding gpu to window");
 
-	this->shapeRenderer = new ShapeRenderer(this);
+	GameRenderer::shapeRenderer = new GameShader();
 
 	/* Buffers */
 
-	this->vertexBuffer = new GameBuffer(this->gpu, SDL_GPU_BUFFERUSAGE_VERTEX, sizeof(PosColorVertex) * 4);
-	this->indexBuffer = new GameBuffer(this->gpu, SDL_GPU_BUFFERUSAGE_INDEX, sizeof(Uint16) * 6);
+	GameRenderer::vertexBuffer = new GameBuffer(GameRenderer::gpu, SDL_GPU_BUFFERUSAGE_VERTEX, sizeof(PosColorVertex) * 4);
+	GameRenderer::indexBuffer = new GameBuffer(GameRenderer::gpu, SDL_GPU_BUFFERUSAGE_INDEX, sizeof(Uint16) * 6);
 	
 
-	Uint32 transferSize = this->vertexBuffer->getSize() + this->indexBuffer->getSize();
-	GameTransferBuffer transferBuffer = GameTransferBuffer(this->gpu, SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD, transferSize);
+	Uint32 transferSize = GameRenderer::vertexBuffer->getSize() + GameRenderer::indexBuffer->getSize();
+	GameTransferBuffer transferBuffer = GameTransferBuffer(GameRenderer::gpu, SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD, transferSize);
 	
 	PosColorVertex* transferData = (PosColorVertex*) SDL_malloc(transferSize);
 
@@ -158,16 +157,16 @@ GameRenderer::GameRenderer(){
 	transferBuffer.loadTransferBuffer(transferData, transferSize);
 	SDL_free(transferData);
 
-	SDL_GPUCommandBuffer* uploadCmdBuf = SDL_AcquireGPUCommandBuffer(this->gpu);
+	SDL_GPUCommandBuffer* uploadCmdBuf = SDL_AcquireGPUCommandBuffer(GameRenderer::gpu);
 	if(uploadCmdBuf == NULL) throw RendererException("Failed to acquire command buffer");
 
 	SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(uploadCmdBuf);
 
 
 	SDL_GPUTransferBufferLocation transferLoc{.transfer_buffer = transferBuffer.buffer, .offset = 0};
-	SDL_GPUBufferRegion vertexLoc{.buffer = this->vertexBuffer->buffer, .offset = 0, .size = this->vertexBuffer->getSize()};
-	SDL_GPUTransferBufferLocation transferLoc_index{.transfer_buffer = transferBuffer.buffer, .offset = this->vertexBuffer->getSize()};
-	SDL_GPUBufferRegion indexLoc{.buffer = this->indexBuffer->buffer, .offset = 0, .size = this->indexBuffer->getSize()};
+	SDL_GPUBufferRegion vertexLoc{.buffer = GameRenderer::vertexBuffer->buffer, .offset = 0, .size = GameRenderer::vertexBuffer->getSize()};
+	SDL_GPUTransferBufferLocation transferLoc_index{.transfer_buffer = transferBuffer.buffer, .offset = GameRenderer::vertexBuffer->getSize()};
+	SDL_GPUBufferRegion indexLoc{.buffer = GameRenderer::indexBuffer->buffer, .offset = 0, .size = GameRenderer::indexBuffer->getSize()};
 	SDL_UploadToGPUBuffer(copyPass, &transferLoc, &vertexLoc, false);
 	SDL_UploadToGPUBuffer(copyPass, &transferLoc_index, &indexLoc, false);
 	
@@ -176,19 +175,19 @@ GameRenderer::GameRenderer(){
 	
 
 	
-	SDL_Log("%s\n", SDL_GetGPUDeviceDriver(this->gpu));
+	SDL_Log("%s\n", SDL_GetGPUDeviceDriver(GameRenderer::gpu));
 
-	this->camera = new GameCamera();
-	this->isWireframe = false;
+	GameRenderer::camera = new GameCamera();
+	GameRenderer::isWireframe = false;
 }
 
 void GameRenderer::render(){
 
-	SDL_GPUCommandBuffer* buff = SDL_AcquireGPUCommandBuffer(this->gpu);
+	SDL_GPUCommandBuffer* buff = SDL_AcquireGPUCommandBuffer(GameRenderer::gpu);
 	if(buff == NULL) throw RendererException("Failed to acquire command buffer");
 
 	SDL_GPUTexture* swapchainTex;
-	if (!SDL_WaitAndAcquireGPUSwapchainTexture(buff, this->window, &swapchainTex, NULL, NULL)) {
+	if (!SDL_WaitAndAcquireGPUSwapchainTexture(buff, GameRenderer::window, &swapchainTex, NULL, NULL)) {
 		SDL_SubmitGPUCommandBuffer(buff);
 		throw RendererException("Failed to acquire swapchain texture");
 	}	
@@ -206,19 +205,19 @@ void GameRenderer::render(){
 	CTI.store_op = SDL_GPU_STOREOP_STORE;
 
 	
-	//this->camera->rotateModel(1.0f, 0.8f, 0.0f, 0.6f);
-	glm::mat4 cameraMatrix = this->camera->getCameraMatrix();
+	//GameRenderer::camera->rotateModel(1.0f, 0.8f, 0.0f, 0.6f);
+	glm::mat4 cameraMatrix = GameRenderer::camera->getCameraMatrix();
 	
 
 	SDL_GPURenderPass* render_pass = SDL_BeginGPURenderPass(buff, &CTI, 1, NULL);	//like photoshop layers
 
-	std::string pipelineKey = this->isWireframe ? ShapeRenderer::wireframeKey : ShapeRenderer::pipelineKey;
+	std::string pipelineKey = GameRenderer::isWireframe ? GameShader::wireframeKey : GameShader::pipelineKey;
 
-	SDL_BindGPUGraphicsPipeline(render_pass, this->getGraphicsPipeline(pipelineKey)); 
-	SDL_GPUBufferBinding buffBinding{.buffer = this->vertexBuffer->buffer, .offset = 0};
+	SDL_BindGPUGraphicsPipeline(render_pass, GameRenderer::getGraphicsPipeline(pipelineKey)); 
+	SDL_GPUBufferBinding buffBinding{.buffer = GameRenderer::vertexBuffer->buffer, .offset = 0};
 	SDL_BindGPUVertexBuffers(render_pass, 0, &buffBinding, 1);
 
-	SDL_GPUBufferBinding buffBinding_index{.buffer = this->indexBuffer->buffer, .offset = 0};
+	SDL_GPUBufferBinding buffBinding_index{.buffer = GameRenderer::indexBuffer->buffer, .offset = 0};
 	SDL_BindGPUIndexBuffer(render_pass, &buffBinding_index, SDL_GPU_INDEXELEMENTSIZE_16BIT);
 	SDL_PushGPUVertexUniformData(buff, 0, &cameraMatrix, sizeof(cameraMatrix));
 
@@ -233,8 +232,8 @@ void GameRenderer::render(){
 
 void GameRenderer::buildGraphicsPipeline(std::string key, SDL_GPUGraphicsPipelineCreateInfo& config){
 
-	if (!this->graphicPipelines.contains(key)){
-		this->graphicPipelines[key] = SDL_CreateGPUGraphicsPipeline(this->gpu, &config);
+	if (!GameRenderer::graphicPipelines.contains(key)){
+		GameRenderer::graphicPipelines[key] = SDL_CreateGPUGraphicsPipeline(GameRenderer::gpu, &config);
 	}else{
 		SDL_Log("error: graphics pipeline with key %s exists!", key);
 	}
@@ -244,7 +243,7 @@ void GameRenderer::buildGraphicsPipeline(std::string key, SDL_GPUGraphicsPipelin
 SDL_GPUGraphicsPipeline* GameRenderer::getGraphicsPipeline(std::string key){
 	SDL_GPUGraphicsPipeline* pipeline = nullptr;
 	try{
-		pipeline = this->graphicPipelines.at(key);
+		pipeline = GameRenderer::graphicPipelines.at(key);
 	}catch(std::out_of_range e){
 		SDL_Log("%s\nCould not find pipeline with key \'%s\'", e.what(), key);
 	}
@@ -252,22 +251,22 @@ SDL_GPUGraphicsPipeline* GameRenderer::getGraphicsPipeline(std::string key){
 }
 
 void GameRenderer::releasePipelines(){
-	for(const auto& [key, pipeline] : this->graphicPipelines){
+	for(const auto& [key, pipeline] : GameRenderer::graphicPipelines){
 		SDL_Log("Releasing %s" , key.c_str());
-		SDL_ReleaseGPUGraphicsPipeline(this->gpu, pipeline);
+		SDL_ReleaseGPUGraphicsPipeline(GameRenderer::gpu, pipeline);
 	}
 }
 
-GameRenderer::~GameRenderer(){
-	this->releasePipelines();
-	delete this->vertexBuffer;
-	delete this->indexBuffer;
-	delete this->camera;
-	delete this->shapeRenderer;
+void GameRenderer::closeRenderer(){
+	GameRenderer::releasePipelines();
+	delete GameRenderer::vertexBuffer;
+	delete GameRenderer::indexBuffer;
+	delete GameRenderer::camera;
+	delete GameRenderer::shapeRenderer;
 
-	SDL_ReleaseWindowFromGPUDevice(this->gpu, this->window);
-	SDL_DestroyWindow(this->window);
-    SDL_DestroyGPUDevice(this->gpu);
+	SDL_ReleaseWindowFromGPUDevice(GameRenderer::gpu, GameRenderer::window);
+	SDL_DestroyWindow(GameRenderer::window);
+    SDL_DestroyGPUDevice(GameRenderer::gpu);
 
 }
 

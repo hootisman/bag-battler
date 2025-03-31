@@ -4,22 +4,22 @@
 #include <string>
 
 
-class GameRenderer;
+// class GameRenderer;
 
 
-class ShapeRenderer{
+class GameShader{
 public:
 
     inline static const std::string pipelineKey = "PIPE";
     inline static const std::string wireframeKey = "WIREFRAME";
 
-    GameRenderer* gameRenderer;
+    // GameRenderer* gameRenderer;
 
 
-    ShapeRenderer(GameRenderer*);
+    GameShader();
     void render();
     void renderCamera();
-    ~ShapeRenderer();
+    ~GameShader();
 
 private:
     SDL_GPUGraphicsPipelineCreateInfo config, wireframeConfig;
