@@ -2,7 +2,7 @@
 #include "render/shader.h"
 
 
-void GameShader::initPipelines(){
+void TestQuadShader::initPipelines(){
 	SDL_GPUShader* vertShader = GameRenderer::initShader("transtest.vert.spv", GameRenderer::gpu, SDL_GPU_SHADERSTAGE_VERTEX, 0, 1, 0, 0);
 	SDL_GPUShader* fragShader = GameRenderer::initShader("SolidColor.frag.spv", GameRenderer::gpu, SDL_GPU_SHADERSTAGE_FRAGMENT, 0, 0, 0, 0);
 
@@ -23,21 +23,20 @@ void GameShader::initPipelines(){
     this->config.rasterizer_state.fill_mode = SDL_GPU_FILLMODE_FILL;
     this->wireframeConfig.rasterizer_state.fill_mode = SDL_GPU_FILLMODE_LINE;
 
-    GameRenderer::buildGraphicsPipeline(GameShader::pipelineKey, this->config);
-	if (GameRenderer::getGraphicsPipeline(GameShader::pipelineKey) == NULL) throw RendererException("Failed to create Fill Pipeline");
+    GameRenderer::buildGraphicsPipeline(TestQuadShader::pipelineKey, this->config);
+	if (GameRenderer::getGraphicsPipeline(TestQuadShader::pipelineKey) == NULL) throw RendererException("Failed to create Fill Pipeline");
 
-    GameRenderer::buildGraphicsPipeline(GameShader::wireframeKey, this->wireframeConfig);
-	if (GameRenderer::getGraphicsPipeline(GameShader::wireframeKey) == NULL) throw RendererException("Failed to create Wireframe Pipeline");
+    GameRenderer::buildGraphicsPipeline(TestQuadShader::wireframeKey, this->wireframeConfig);
+	if (GameRenderer::getGraphicsPipeline(TestQuadShader::wireframeKey) == NULL) throw RendererException("Failed to create Wireframe Pipeline");
 
 	SDL_ReleaseGPUShader(GameRenderer::gpu, vertShader);
 	SDL_ReleaseGPUShader(GameRenderer::gpu, fragShader);
 }
 
-GameShader::GameShader(){
-    // this->gameRenderer = gameRenderer;
+TestQuadShader::TestQuadShader(){
     this->initPipelines();
 }
 
-GameShader::~GameShader(){
+TestQuadShader::~TestQuadShader(){
 
 }

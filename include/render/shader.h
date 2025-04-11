@@ -5,15 +5,15 @@
 
 
 
-class GameShader{
+class TestQuadShader{
 public:
     inline static const std::string pipelineKey = "PIPE";
     inline static const std::string wireframeKey = "WIREFRAME";
 
-    GameShader();
-    void render();
-    void renderCamera();
-    ~GameShader();
+    TestQuadShader();
+    // void render();
+    // void renderCamera();
+    ~TestQuadShader();
 
 private:
     SDL_GPUGraphicsPipelineCreateInfo config, wireframeConfig;

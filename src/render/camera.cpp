@@ -119,6 +119,7 @@ void GameCamera::moveCamera(Uint32 key, float deltaTime){
 }
 
 glm::mat4 GameCamera::getCameraMatrix(){
+    //todo: move this calc to the shader
     return this->proj * this->view * this->model;
 }
 

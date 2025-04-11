@@ -15,7 +15,6 @@ int main( int argc, char* args[] )
 	theGame = new Game();
 
 	theGame->gameLoop();
-
 	freeGame();
 	return 0;
 }

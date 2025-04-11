@@ -1,0 +1,107 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-w",
+      "-std=c++20",
+      "-Iinclude",
+      "-o",
+      "bag.out",
+      "main.cpp"
+    ],
+    "directory": "/home/hootisman/Projects/bag-battler",
+    "file": "/home/hootisman/Projects/bag-battler/main.cpp",
+    "output": "/home/hootisman/Projects/bag-battler/bag.out"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-w",
+      "-std=c++20",
+      "-Iinclude",
+      "-o",
+      "bag.out",
+      "src/game.cpp"
+    ],
+    "directory": "/home/hootisman/Projects/bag-battler",
+    "file": "/home/hootisman/Projects/bag-battler/src/game.cpp",
+    "output": "/home/hootisman/Projects/bag-battler/bag.out"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-w",
+      "-std=c++20",
+      "-Iinclude",
+      "-o",
+      "bag.out",
+      "src/util.cpp"
+    ],
+    "directory": "/home/hootisman/Projects/bag-battler",
+    "file": "/home/hootisman/Projects/bag-battler/src/util.cpp",
+    "output": "/home/hootisman/Projects/bag-battler/bag.out"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-w",
+      "-std=c++20",
+      "-Iinclude",
+      "-o",
+      "bag.out",
+      "src/render/graphics.cpp"
+    ],
+    "directory": "/home/hootisman/Projects/bag-battler",
+    "file": "/home/hootisman/Projects/bag-battler/src/render/graphics.cpp",
+    "output": "/home/hootisman/Projects/bag-battler/bag.out"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-w",
+      "-std=c++20",
+      "-Iinclude",
+      "-o",
+      "bag.out",
+      "src/render/camera.cpp"
+    ],
+    "directory": "/home/hootisman/Projects/bag-battler",
+    "file": "/home/hootisman/Projects/bag-battler/src/render/camera.cpp",
+    "output": "/home/hootisman/Projects/bag-battler/bag.out"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-w",
+      "-std=c++20",
+      "-Iinclude",
+      "-o",
+      "bag.out",
+      "src/render/shader.cpp"
+    ],
+    "directory": "/home/hootisman/Projects/bag-battler",
+    "file": "/home/hootisman/Projects/bag-battler/src/render/shader.cpp",
+    "output": "/home/hootisman/Projects/bag-battler/bag.out"
+  },
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-c",
+      "-w",
+      "-std=c++20",
+      "-Iinclude",
+      "-o",
+      "bag.out",
+      "src/model/model.cpp"
+    ],
+    "directory": "/home/hootisman/Projects/bag-battler",
+    "file": "/home/hootisman/Projects/bag-battler/src/model/model.cpp",
+    "output": "/home/hootisman/Projects/bag-battler/bag.out"
+  }
+]

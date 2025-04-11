@@ -11,11 +11,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-class GameShader;
-
-// #define SCREEN_W 640
-// #define SCREEN_H 480
-// #define SHADER_RESOURCE_PATH "resources/shaders/"
+class TestQuadShader;
+class GameModel;
 
 typedef struct PosColorVertex{
     float x,y,z;
@@ -26,10 +23,11 @@ typedef struct GameBuffer {
     SDL_GPUBuffer* buffer;
     SDL_GPUDevice* gpu;
     SDL_GPUBufferCreateInfo info;
+    SDL_GPUBufferRegion defaultRegion;
 
     GameBuffer() {}
     GameBuffer(SDL_GPUDevice*, SDL_GPUBufferUsageFlags, Uint32);
-    int getSize();
+    Uint32 getSize() const;
     ~GameBuffer();
 
 } GameBuffer;
@@ -41,7 +39,8 @@ typedef struct GameTransferBuffer {
 
     GameTransferBuffer() {}
     GameTransferBuffer(SDL_GPUDevice*, SDL_GPUTransferBufferUsage, Uint32);
-    int getSize();
+    Uint32 getSize() const;
+    SDL_GPUTransferBufferLocation getLocation(Uint32);
     ~GameTransferBuffer();
 
     void loadTransferBuffer(void*, Uint32);
@@ -56,8 +55,11 @@ namespace GameRenderer{
     inline GameBuffer* vertexBuffer;
     inline GameBuffer* indexBuffer;
     inline bool isWireframe;
-    inline GameShader* shapeRenderer;
+    inline TestQuadShader* shapeRenderer;
     inline std::unordered_map<std::string, SDL_GPUGraphicsPipeline*> graphicPipelines;
+
+    //todo: remove, daring today are we?
+    inline GameModel* model;
 
     SDL_GPUShader* initShader(std::string, SDL_GPUDevice*, SDL_GPUShaderStage, Uint32, Uint32, Uint32, Uint32);
     SDL_GPUGraphicsPipelineCreateInfo createPipelineConfig(
@@ -67,6 +69,7 @@ namespace GameRenderer{
     void buildGraphicsPipeline(std::string, SDL_GPUGraphicsPipelineCreateInfo&);
     SDL_GPUGraphicsPipeline* getGraphicsPipeline(std::string);
     void initRenderer();
+    void uploadVIBuffers(void*, const GameBuffer*, const GameBuffer*);
     void render();
     void closeRenderer();
     void releasePipelines();
